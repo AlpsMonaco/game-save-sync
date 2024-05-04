@@ -46,8 +46,8 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
             return rpc_service_pb2.UploadFileReply(status=True)
 
     def DownloadFile(self, request, context):
-        self._logger(f"发送文件{os.path.basename(filepath)}")
         filepath = self._get_filepath()
+        self._logger(f"发送文件{os.path.basename(filepath)}")
         with open(filepath, "rb") as fd:
             data = fd.read()
             response = rpc_service_pb2.DownloadFileReply(data=data)
