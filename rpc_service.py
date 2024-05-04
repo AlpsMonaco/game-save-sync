@@ -71,7 +71,7 @@ class GrpcClient:
         return stub.UploadFile(rpc_service_pb2.UploadFileRequest(data=data))
 
     @staticmethod
-    def download_file(channel: grpc.Channel, data: bytes):
+    def download_file(channel: grpc.Channel):
         stub = rpc_service_pb2_grpc.RpcStub(channel)
         return stub.DownloadFile(rpc_service_pb2.DownloadFileRequest())
 
