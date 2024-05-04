@@ -44,6 +44,7 @@ class MainWindow(QWidget):
 
         hbox_layout_01 = QHBoxLayout()
         self.ip_label = QLabel("ip:")
+        self.ip_label.setMinimumWidth(40)
         self.ip_edit = QLineEdit(self.config.ip)
         # self.ip_edit.setStyleSheet("QLineEdit { padding-left: 0px; margin-left:14px}")
         self.ip_edit.setReadOnly(True)
@@ -57,6 +58,7 @@ class MainWindow(QWidget):
 
         hbox_layout_02 = QHBoxLayout()
         self.filepath_title_label = QLabel("文件:")
+        self.filepath_title_label.setMinimumWidth(40)
         self.filepath_line_edit = QLineEdit(self.config.filepath)
         # self.filepath_line_edit.setStyleSheet("QLineEdit { padding-left: 0px; }")
         hbox_layout_02.addWidget(self.filepath_title_label)
