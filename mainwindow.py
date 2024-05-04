@@ -98,7 +98,7 @@ class MainWindow(QWidget):
         self.signal.print_to_console.connect(self.console.append)
 
         self.setLayout(qvbox_layout)
-        self.setGeometry(300, 300, 400, 400)
+        self.setGeometry(300, 300, 500, 400)
         self.setWindowTitle("Game Save Sync")
         self.show()
         self.start_grpc_thread()
