@@ -143,16 +143,15 @@ class MainWindow(QWidget):
                         return
                     if local_file_mtime > response.timestamp:
                         self.print("正在上传文件")
-                        GrpcClient.upload_file(channel, data)
+                        GrpcClient.upload_file(channel, local_filepath)
                         self.print("上传文件成功")
                     else:
                         self.print("正在下载文件")
-                        response = GrpcClient.download_file(channel)
-                        self.print("下载文件成功")
-                        self.print("写入文件")
                         with open(local_filepath, "wb") as fp:
-                            fp.write(response.data)
-                        self.print("写入文件成功")
+                            response = GrpcClient.download_file(channel)
+                            for i in response:
+                                fp.write(i.data)
+                        self.print("下载文件成功")
                 self.print("同步成功")
 
             except Exception as e:

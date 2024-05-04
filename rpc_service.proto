@@ -6,8 +6,8 @@ service Rpc {
   rpc Ping (PingRequest) returns (PingReply) {}
   rpc Binary(BinaryRequest) returns(BinaryReply){}
   rpc FileStatus(FileStatusRequest) returns(FileStatusReply){}
-  rpc UploadFile(UploadFileRequest)returns(UploadFileReply){}
-  rpc DownloadFile(DownloadFileRequest)returns(DownloadFileReply){}
+  rpc UploadFile(stream UploadFileRequest)returns(UploadFileReply){}
+  rpc DownloadFile(DownloadFileRequest)returns(stream DownloadFileReply){}
 }
 
 message DownloadFileRequest{}

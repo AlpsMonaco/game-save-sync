@@ -36,23 +36,24 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
             md5=md5, timestamp=file_timestamp, filename=os.path.basename(filepath)
         )
 
-    def UploadFile(self, request, context):
+    def UploadFile(self, it, context):
         filepath = self._get_filepath()
-        self._logger(f"接收文件{os.path.basename(filepath)}")
-        self._logger(f"正在写入{filepath}")
         with open(filepath, "wb") as fd:
-            fd.write(request.data)
-            self._logger("写入文件成功")
-            return rpc_service_pb2.UploadFileReply(status=True)
+            for i in it:
+                fd.write(i.data)
+                return rpc_service_pb2.UploadFileReply(status=True)
 
     def DownloadFile(self, request, context):
         filepath = self._get_filepath()
         self._logger(f"发送文件{os.path.basename(filepath)}")
+        BUF_SIZE = 1024
         with open(filepath, "rb") as fd:
-            data = fd.read()
-            response = rpc_service_pb2.DownloadFileReply(data=data)
-            self._logger(f"发送文件成功")
-            return response
+            while True:
+                data = fd.read(BUF_SIZE)
+                if len(data) <= 0:
+                    self._logger(f"发送文件成功")
+                    return
+                yield rpc_service_pb2.DownloadFileReply(data=data)
 
 
 class GrpcClient:
@@ -66,9 +67,20 @@ class GrpcClient:
         return stub.FileStatus(rpc_service_pb2.FileStatusRequest())
 
     @staticmethod
-    def upload_file(channel: grpc.Channel, data: bytes):
+    def upload_file(channel: grpc.Channel, filepath: str):
+        BUF_SIZE = 1024
+
+        def wrapper():
+            with open(filepath, "rb") as fd:
+                while True:
+                    data = fd.read(BUF_SIZE)
+                    if len(data) <= 0:
+                        return
+                    yield rpc_service_pb2.UploadFileRequest(data=data)
+
         stub = rpc_service_pb2_grpc.RpcStub(channel)
-        return stub.UploadFile(rpc_service_pb2.UploadFileRequest(data=data))
+        response = stub.UploadFile(wrapper())
+        return response
 
     @staticmethod
     def download_file(channel: grpc.Channel):
