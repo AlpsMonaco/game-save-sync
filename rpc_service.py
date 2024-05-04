@@ -61,7 +61,8 @@ class GrpcClient:
     def get_remote_file_status(ip: str):
         with grpc.insecure_channel(f"{ip}:{GRPC_PORT}") as channel:
             stub = rpc_service_pb2_grpc.RpcStub(channel)
-            return stub.FileStatus(rpc_service_pb2.FileStatusRequest())
+            response = stub.FileStatus(rpc_service_pb2.FileStatusRequest())
+            return response
 
 
 def serve():
