@@ -16,6 +16,7 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__()
         self._get_filepath = kwargs["get_filepath"]
+        self._logger = kwargs["logger"]
 
     def Ping(self, request, context):
         print(request)
@@ -37,15 +38,21 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
 
     def UploadFile(self, request, context):
         filepath = self._get_filepath()
+        self._logger(f"接收文件{os.path.basename(filepath)}")
+        self._logger(f"正在写入{filepath}")
         with open(filepath, "wb") as fd:
             fd.write(request.data)
+            self._logger("写入文件成功")
             return rpc_service_pb2.UploadFileReply(status=True)
 
     def DownloadFile(self, request, context):
+        self._logger(f"发送文件{os.path.basename(filepath)}")
         filepath = self._get_filepath()
         with open(filepath, "rb") as fd:
             data = fd.read()
-            return rpc_service_pb2.DownloadFileReply(data=data)
+            response = rpc_service_pb2.DownloadFileReply(data=data)
+            self._logger(f"发送文件成功")
+            return response
 
 
 class GrpcClient:
