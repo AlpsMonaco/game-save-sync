@@ -44,7 +44,7 @@ class MainWindow(QWidget):
 
         hbox_layout_01 = QHBoxLayout()
         self.ip_label = QLabel("ip:")
-        self.ip_label.setMinimumWidth(40)
+        self.ip_label.setMinimumWidth(35)
         self.ip_edit = QLineEdit(self.config.ip)
         # self.ip_edit.setStyleSheet("QLineEdit { padding-left: 0px; margin-left:14px}")
         self.ip_edit.setReadOnly(True)
@@ -58,19 +58,21 @@ class MainWindow(QWidget):
 
         hbox_layout_02 = QHBoxLayout()
         self.filepath_title_label = QLabel("文件:")
-        self.filepath_title_label.setMinimumWidth(40)
+        self.filepath_title_label.setMinimumWidth(35)
         self.filepath_line_edit = QLineEdit(self.config.filepath)
-        # self.filepath_line_edit.setStyleSheet("QLineEdit { padding-left: 0px; }")
-        hbox_layout_02.addWidget(self.filepath_title_label)
-        hbox_layout_02.addWidget(self.filepath_line_edit)
-        qvbox_layout.addLayout(hbox_layout_02)
-
-        hbox_layout_03 = QHBoxLayout()
         self.select_file_button = QPushButton("选择文件")
         self.select_file_button.clicked.connect(self.show_file_select_dialog)
-        hbox_layout_03.addWidget(self.select_file_button)
-        hbox_layout_03.addStretch(1)
-        qvbox_layout.addLayout(hbox_layout_03)
+        hbox_layout_02.addWidget(self.filepath_title_label, 0)
+        hbox_layout_02.addWidget(self.filepath_line_edit, 1)
+        hbox_layout_02.addWidget(self.select_file_button, 0)
+        qvbox_layout.addLayout(hbox_layout_02)
+
+        # hbox_layout_03 = QHBoxLayout()
+        # self.select_file_button = QPushButton("选择文件")
+        # self.select_file_button.clicked.connect(self.show_file_select_dialog)
+        # hbox_layout_03.addWidget(self.select_file_button)
+        # hbox_layout_03.addStretch(1)
+        # qvbox_layout.addLayout(hbox_layout_03)
 
         self.console = QTextEdit()
         self.console.setReadOnly(True)
@@ -96,7 +98,7 @@ class MainWindow(QWidget):
         self.signal.print_to_console.connect(self.console.append)
 
         self.setLayout(qvbox_layout)
-        self.setGeometry(300, 300, 350, 400)
+        self.setGeometry(300, 300, 400, 400)
         self.setWindowTitle("Game Save Sync")
         self.show()
         self.start_grpc_thread()
@@ -109,7 +111,6 @@ class MainWindow(QWidget):
         )
         self.grpc_server.add_insecure_port("[::]:" + str(GRPC_PORT))
         self.grpc_server.start()
-        self.print(f"grpc服务器启动,正在监听{GRPC_PORT}端口")
 
     def show_file_select_dialog(self):
         filepath = QFileDialog.getOpenFileName(
