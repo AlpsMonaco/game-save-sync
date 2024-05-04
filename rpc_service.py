@@ -35,25 +35,17 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
             md5=md5, timestamp=file_timestamp, filename=os.path.basename(filepath)
         )
 
+    def UploadFile(self, request, context):
+        filepath = self._get_filepath()
+        with open(filepath, "wb") as fd:
+            fd.write(request.data)
+            return rpc_service_pb2.UploadFileReply(status=True)
 
-class GrpcServer:
-    def __init__(self, *args, **kwargs) -> None:
-        self._func_map = kwargs
-        if "logger" in self._func_map:
-            self._logger = self._func_map["logger"]
-        else:
-            self._logger = print
-
-    def serve(self):
-        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        rpc_service_pb2_grpc.add_RpcServicer_to_server(
-            RPCService(file_status_getter=self._func_map["file_status_getter"]),
-            self.server,
-        )
-        self.server.add_insecure_port("[::]:" + str(GRPC_PORT))
-        self.server.start()
-        self._logger(f"grpc服务器启动,正在监听{GRPC_PORT}端口")
-        self.server.wait_for_termination()
+    def DownloadFile(self, request, context):
+        filepath = self._get_filepath()
+        with open(filepath, "rb") as fd:
+            data = fd.read()
+            return rpc_service_pb2.DownloadFileReply(data=data)
 
 
 class GrpcClient:
@@ -64,8 +56,17 @@ class GrpcClient:
     @staticmethod
     def get_remote_file_status(channel: grpc.Channel):
         stub = rpc_service_pb2_grpc.RpcStub(channel)
-        response = stub.FileStatus(rpc_service_pb2.FileStatusRequest())
-        return response
+        return stub.FileStatus(rpc_service_pb2.FileStatusRequest())
+
+    @staticmethod
+    def upload_file(channel: grpc.Channel, data: bytes):
+        stub = rpc_service_pb2_grpc.RpcStub(channel)
+        return stub.UploadFile(rpc_service_pb2.UploadFileRequest(data=data))
+
+    @staticmethod
+    def download_file(channel: grpc.Channel, data: bytes):
+        stub = rpc_service_pb2_grpc.RpcStub(channel)
+        return stub.DownloadFile(rpc_service_pb2.DownloadFileRequest())
 
 
 def serve():

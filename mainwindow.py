@@ -132,6 +132,7 @@ class MainWindow(QWidget):
                     data = fp.read()
                     local_file_md5 = hashlib.md5(data).hexdigest()
                 local_file_basename = os.path.basename(local_filepath)
+                local_file_mtime = os.path.getmtime(local_filepath)
                 with GrpcClient.get_channel(self.config.ip) as channel:
                     response = GrpcClient.get_remote_file_status(channel)
                     if local_file_basename != response.filename:
@@ -140,6 +141,19 @@ class MainWindow(QWidget):
                     if response.md5 == local_file_md5:
                         self.print("文件一致，跳过")
                         return
+                    if local_file_mtime > response.timestamp:
+                        self.print("正在上传文件")
+                        GrpcClient.upload_file(channel, data)
+                        self.print("上传文件成功")
+                    else:
+                        self.print("正在下载文件")
+                        response = GrpcClient.download_file(channel)
+                        self.print("下载文件成功")
+                        self.print("写入文件")
+                        with open(local_filepath, "wb") as fp:
+                            fp.write(response.data)
+                        self.print("写入文件成功")
+                self.print("同步成功")
 
             except Exception as e:
                 self.print("失败")

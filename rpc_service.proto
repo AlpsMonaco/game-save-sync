@@ -6,6 +6,21 @@ service Rpc {
   rpc Ping (PingRequest) returns (PingReply) {}
   rpc Binary(BinaryRequest) returns(BinaryReply){}
   rpc FileStatus(FileStatusRequest) returns(FileStatusReply){}
+  rpc UploadFile(UploadFileRequest)returns(UploadFileReply){}
+  rpc DownloadFile(DownloadFileRequest)returns(DownloadFileReply){}
+}
+
+message DownloadFileRequest{}
+message DownloadFileReply{
+  bytes data = 1;
+}
+
+message UploadFileRequest{
+  bytes data = 1;
+}
+
+message UploadFileReply{
+  bool status = 1;
 }
 
 message PingRequest {
