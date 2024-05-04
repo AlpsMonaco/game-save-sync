@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import QObject, pyqtSignal
 import grpc
 
-from rpc_service import GRPC_PORT, GrpcClient, GrpcServer, RPCService
+from rpc_service import GRPC_PORT, GrpcClient, RPCService
 from config import Config
 import rpc_service_pb2_grpc
 
