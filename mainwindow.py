@@ -1,4 +1,5 @@
 from concurrent import futures
+import hashlib
 import os
 import sys
 import threading
@@ -126,11 +127,20 @@ class MainWindow(QWidget):
         def sync_method():
             self.print("开始同步")
             try:
+                local_filepath = self.filepath_line_edit.text()
+                with open(local_filepath, "rb") as fp:
+                    data = fp.read()
+                    local_file_md5 = hashlib.md5(data).hexdigest()
+                local_file_basename = os.path.basename(local_filepath)
                 with GrpcClient.get_channel(self.config.ip) as channel:
                     response = GrpcClient.get_remote_file_status(channel)
-                    self.print(
-                        f"md5:{response.md5} timestamp:{response.timestamp} filename:{response.filename}"
-                    )
+                    if local_file_basename != response.filename:
+                        self.print("错误：文件名不一致")
+                        return
+                    if response.md5 == local_file_md5:
+                        self.print("文件一致，跳过")
+                        return
+
             except Exception as e:
                 self.print("失败")
                 self.print(str(e))
