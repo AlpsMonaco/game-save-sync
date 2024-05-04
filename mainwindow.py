@@ -67,13 +67,6 @@ class MainWindow(QWidget):
         hbox_layout_02.addWidget(self.select_file_button, 0)
         qvbox_layout.addLayout(hbox_layout_02)
 
-        # hbox_layout_03 = QHBoxLayout()
-        # self.select_file_button = QPushButton("选择文件")
-        # self.select_file_button.clicked.connect(self.show_file_select_dialog)
-        # hbox_layout_03.addWidget(self.select_file_button)
-        # hbox_layout_03.addStretch(1)
-        # qvbox_layout.addLayout(hbox_layout_03)
-
         self.console = QTextEdit()
         self.console.setReadOnly(True)
         qvbox_layout.addWidget(self.console)
@@ -88,11 +81,6 @@ class MainWindow(QWidget):
         hbox_layout_04.addWidget(self.close_button)
         hbox_layout_04.addStretch(1)
         qvbox_layout.addLayout(hbox_layout_04)
-
-        # qvbox_layout.setContentsMargins(10, 10, 10, 10)
-        # hbox_layout_01.setContentsMargins(5, 0, 0, 5)
-        # hbox_layout_02.setContentsMargins(5, 0, 0, 0)
-        # hbox_layout_03.setContentsMargins(0, 0, 0, 0)
 
         self.signal = Signal()
         self.signal.print_to_console.connect(self.console.append)
@@ -138,8 +126,11 @@ class MainWindow(QWidget):
         def sync_method():
             self.print("开始同步")
             try:
-                response = GrpcClient.get_remote_file_status(self.config.ip)
-                self.print(f"{response.md5} {response.timestamp} {response.filename}")
+                with GrpcClient.get_channel() as channel:
+                    response = GrpcClient.get_remote_file_status(channel)
+                self.print(
+                    f"md5:{response.md5} timestamp:{response.timestamp} filename:{response.filename}"
+                )
             except Exception as e:
                 self.print(str(e))
             finally:
