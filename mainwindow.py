@@ -128,10 +128,11 @@ class MainWindow(QWidget):
             try:
                 with GrpcClient.get_channel(self.config.ip) as channel:
                     response = GrpcClient.get_remote_file_status(channel)
-                self.print(
-                    f"md5:{response.md5} timestamp:{response.timestamp} filename:{response.filename}"
-                )
+                    self.print(
+                        f"md5:{response.md5} timestamp:{response.timestamp} filename:{response.filename}"
+                    )
             except Exception as e:
+                self.print("失败")
                 self.print(str(e))
             finally:
                 self.sync_button.setDisabled(False)
