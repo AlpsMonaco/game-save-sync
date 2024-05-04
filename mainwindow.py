@@ -126,7 +126,7 @@ class MainWindow(QWidget):
         def sync_method():
             self.print("开始同步")
             try:
-                with GrpcClient.get_channel() as channel:
+                with GrpcClient.get_channel(self.config.ip) as channel:
                     response = GrpcClient.get_remote_file_status(channel)
                 self.print(
                     f"md5:{response.md5} timestamp:{response.timestamp} filename:{response.filename}"
