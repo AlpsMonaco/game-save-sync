@@ -95,7 +95,7 @@ class MainWindow(QWidget):
     def start_grpc_thread(self):
         self.grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         rpc_service_pb2_grpc.add_RpcServicer_to_server(
-            RPCService(get_filepath=self.filepath_line_edit.text),
+            RPCService(get_filepath=self.filepath_line_edit.text, logger=self.print),
             self.grpc_server,
         )
         self.grpc_server.add_insecure_port("[::]:" + str(GRPC_PORT))
