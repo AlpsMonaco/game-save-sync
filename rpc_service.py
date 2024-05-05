@@ -48,7 +48,6 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
     def DownloadFile(self, request, context):
         filepath = self._get_filepath()
         self._logger(f"发送文件{os.path.basename(filepath)}")
-        BUF_SIZE = 1024
         with open(filepath, "rb") as fd:
             while True:
                 data = fd.read(BUF_SIZE)
@@ -56,6 +55,9 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
                     self._logger(f"发送文件成功")
                     return
                 yield rpc_service_pb2.DownloadFileReply(data=data)
+
+
+BUF_SIZE = 1024 * 1024 * 2
 
 
 class GrpcClient:
@@ -70,8 +72,6 @@ class GrpcClient:
 
     @staticmethod
     def upload_file(channel: grpc.Channel, filepath: str):
-        BUF_SIZE = 1024
-
         def wrapper():
             with open(filepath, "rb") as fd:
                 while True:
