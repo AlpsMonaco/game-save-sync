@@ -6,10 +6,4 @@ pefile==2023.2.7
 protobuf==5.26.1
 pyinstaller==6.6.0
 pyinstaller-hooks-contrib==2024.5
-PyQt5==5.15.10
-PyQt5-Qt5==5.15.2
-PyQt5-sip==12.13.0
-PyQt6==6.7.0
-PyQt6-Qt6==6.7.0
-PyQt6-sip==13.6.0
 pywin32-ctypes==0.2.2

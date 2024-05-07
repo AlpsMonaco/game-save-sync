@@ -4,7 +4,7 @@ import os
 import sys
 import threading
 import time
-from PyQt6.QtWidgets import (
+from PySide6.QtWidgets import (
     QWidget,
     QPushButton,
     QHBoxLayout,
@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import (
     QTextEdit,
     QInputDialog,
 )
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 import grpc
 
 from rpc_service import GRPC_PORT, GrpcClient, RPCService
@@ -25,7 +25,7 @@ import rpc_service_pb2_grpc
 
 
 class Signal(QObject):
-    print_to_console = pyqtSignal(str)
+    print_to_console = Signal(str)
 
 
 class MainWindow(QWidget):
