@@ -1,1 +1,2 @@
-pyinstaller --name game-save-sync -F -w ./mainwindow.py
+source venv/bin/activate
+pyinstaller game-save-sync.spec
