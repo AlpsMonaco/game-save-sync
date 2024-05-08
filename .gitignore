@@ -4,5 +4,3 @@ __pycache__
 config.json
 build
 dist
-mainwindow.spec
-*.spec
