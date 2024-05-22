@@ -132,9 +132,12 @@ if __name__ == "__main__":
         grpc_server,
     )
     grpc_server.add_insecure_port("[::]:" + str(GRPC_PORT))
+    grpc_server.start()
     try:
-        grpc_server.start()
-    except Exception as e:
-        print(e)
-        grpc_server.stop()
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt as e:
+        print("shutting down grpc server")
+        grpc_server.stop(1)
         grpc_server.wait_for_termination()
+        print("grpc server is shut down")
