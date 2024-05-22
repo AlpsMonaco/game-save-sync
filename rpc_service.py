@@ -3,6 +3,7 @@ import hashlib
 import logging
 import os
 import time
+import sys
 
 import grpc
 import rpc_service_pb2
@@ -28,6 +29,10 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
 
     def FileStatus(self, request, context):
         filepath = self._get_filepath()
+        if not os.path.exists(filepath):
+            return rpc_service_pb2.FileStatusReply(
+                md5="", timestamp=0, filename=os.path.basename(filepath)
+            )
         file_timestamp = int(os.path.getmtime(filepath))
         with open(filepath, "rb") as fp:
             data = fp.read()
@@ -117,4 +122,19 @@ def test():
 
 
 if __name__ == "__main__":
-    test()
+    if len(sys.argv) < 2:
+        print("need file path")
+        sys.exit(1)
+
+    grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    service = rpc_service_pb2_grpc.add_RpcServicer_to_server(
+        RPCService(get_filepath=lambda: sys.argv[1], logger=print),
+        grpc_server,
+    )
+    grpc_server.add_insecure_port("[::]:" + str(GRPC_PORT))
+    try:
+        grpc_server.start()
+    except Exception as e:
+        print(e)
+        grpc_server.stop()
+        grpc_server.wait_for_termination()
