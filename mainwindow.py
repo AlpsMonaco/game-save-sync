@@ -128,11 +128,14 @@ class MainWindow(QWidget):
             self.print("开始同步")
             try:
                 local_filepath = self.filepath_line_edit.text()
-                with open(local_filepath, "rb") as fp:
-                    data = fp.read()
-                    local_file_md5 = hashlib.md5(data).hexdigest()
+                local_file_md5 = ""
                 local_file_basename = os.path.basename(local_filepath)
-                local_file_mtime = os.path.getmtime(local_filepath)
+                local_file_mtime = 0
+                if os.path.exists(local_filepath):
+                    with open(local_filepath, "rb") as fp:
+                        data = fp.read()
+                        local_file_md5 = hashlib.md5(data).hexdigest()
+                        local_file_mtime = os.path.getmtime(local_filepath)
                 with GrpcClient.get_channel(self.config.ip) as channel:
                     response = GrpcClient.get_remote_file_status(channel)
                     if local_file_basename != response.filename:
