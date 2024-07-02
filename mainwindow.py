@@ -164,8 +164,10 @@ class MainWindow(QWidget):
                             response = GrpcClient.download_file(channel)
                             for i in response:
                                 fp.write(i.data)
-                        decompress(zip_filepath, os.path.dirname(local_filepath))
                         self.print("下载文件成功")
+                        self.print("正在解压")
+                        decompress(zip_filepath, os.path.dirname(local_filepath))
+                        self.print("解压成功")
                 self.print("同步成功")
 
             except Exception as e:
