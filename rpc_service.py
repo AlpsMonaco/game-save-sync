@@ -52,6 +52,7 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
         self._logger(f"接收文件成功")
         self._logger(f"正在解压")
         decompress(zip_filepath, os.path.dirname(filepath))
+        self._logger(f"解压成功")
         return rpc_service_pb2.UploadFileReply(status=True)
 
     def DownloadFile(self, request, context):
