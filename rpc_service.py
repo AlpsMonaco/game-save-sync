@@ -6,6 +6,7 @@ import time
 import sys
 
 import grpc
+from compress import decompress
 import rpc_service_pb2
 import rpc_service_pb2_grpc
 from threading import Thread
@@ -44,10 +45,13 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
     def UploadFile(self, it, context):
         filepath = self._get_filepath()
         self._logger(f"正在接收文件{os.path.basename(filepath)}")
-        with open(filepath, "wb") as fd:
+        zip_filepath = "temp.zip"
+        with open(zip_filepath, "wb") as fd:
             for i in it:
                 fd.write(i.data)
         self._logger(f"接收文件成功")
+        self._logger(f"正在解压")
+        decompress(zip_filepath, os.path.basename(filepath))
         return rpc_service_pb2.UploadFileReply(status=True)
 
     def DownloadFile(self, request, context):

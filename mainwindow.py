@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import QObject, Signal
 import grpc
 
+from compress import compress_file
 from rpc_service import GRPC_PORT, GrpcClient, RPCService
 from config import Config
 import rpc_service_pb2_grpc
@@ -121,6 +122,13 @@ class MainWindow(QWidget):
             self.config.ip = text
             self.config.save()
 
+    def compress_file(self, filepath: str):
+        zip_filepath = "temp.zip"
+        self.print(f"正在压缩{filepath}")
+        compress_file(filepath, zip_filepath)
+        self.print(f"压缩完成")
+        return zip_filepath
+
     def start_sync(self):
         self.sync_button.setDisabled(True)
 
@@ -145,8 +153,9 @@ class MainWindow(QWidget):
                         self.print("文件一致，跳过")
                         return
                     if local_file_mtime > response.timestamp:
+                        zip_filepath = self.compress_file(local_filepath)
                         self.print("正在上传文件")
-                        GrpcClient.upload_file(channel, local_filepath)
+                        GrpcClient.upload_file(channel, zip_filepath)
                         self.print("上传文件成功")
                     else:
                         self.print("正在下载文件")
