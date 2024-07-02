@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import QObject, Signal
 import grpc
 
-from compress import compress_file
+from compress import compress_file, decompress
 from rpc_service import GRPC_PORT, GrpcClient, RPCService
 from config import Config
 import rpc_service_pb2_grpc
@@ -159,10 +159,12 @@ class MainWindow(QWidget):
                         self.print("上传文件成功")
                     else:
                         self.print("正在下载文件")
-                        with open(local_filepath, "wb") as fp:
+                        zip_filepath = "temp.zip"
+                        with open(zip_filepath, "wb") as fp:
                             response = GrpcClient.download_file(channel)
                             for i in response:
                                 fp.write(i.data)
+                        decompress(zip_filepath, os.path.dirname(local_filepath))
                         self.print("下载文件成功")
                 self.print("同步成功")
 
