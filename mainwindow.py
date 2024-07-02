@@ -124,7 +124,7 @@ class MainWindow(QWidget):
 
     def compress_file(self, filepath: str):
         zip_filepath = "temp.zip"
-        self.print(f"正在压缩{filepath}")
+        self.print(f"正在压缩{os.path.basename(filepath)}")
         compress_file(filepath, zip_filepath)
         self.print(f"压缩完成")
         return zip_filepath
