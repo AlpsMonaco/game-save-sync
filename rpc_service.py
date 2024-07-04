@@ -16,7 +16,7 @@ DEFAULT_GRPC_PORT = 6465
 
 
 def path_convention(path: str):
-    path.replace("\\", "/")
+    path = path.replace("\\", "/")
     return os.path.join(*(path.split("/")))
 
 
