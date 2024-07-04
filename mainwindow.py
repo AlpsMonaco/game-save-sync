@@ -217,6 +217,7 @@ class MainWindow(QWidget):
                 self.print("压缩成功")
                 self.print("正在发送")
                 # todo
+                GrpcClient.upload_directory_archive(channel)
                 self.print("发送成功")
 
     def start_sync(self):
