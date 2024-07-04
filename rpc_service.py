@@ -84,6 +84,7 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
         decompress("temp.zip", dir_path)
         self._logger("解压成功")
         self._logger("同步成功")
+        return rpc_service_pb2.ReceiveDirectoryReply()
 
     def DirectoryStatus(self, request, context):
         directory_path = self._get_filepath()
