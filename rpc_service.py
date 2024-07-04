@@ -82,14 +82,13 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
     def DownloadDirectory(self, request, context):
         self._logger("正在发送文件到远端")
         directory_path = self._get_filepath()
-        zip_filepath = "temp.zip"
-        with zipfile.ZipFile(zip_filepath, "w", zipfile.ZIP_DEFLATED) as zip:
+        with zipfile.ZipFile("temp.zip", "w", zipfile.ZIP_DEFLATED) as zip:
             for file in request.files:
                 file = path_convention(file)
                 local_filepath = os.path.join(directory_path, file)
                 zip_filepath = local_filepath[len(directory_path) + 1 :]
                 zip.write(local_filepath, zip_filepath)
-        with open(zip_filepath, "rb") as fd:
+        with open("temp.zip", "rb") as fd:
             while True:
                 data = fd.read(BUF_SIZE)
                 if len(data) <= 0:
