@@ -207,7 +207,7 @@ class MainWindow(QWidget):
                         self.print(str(e))
 
             if len(send_list) > 0:
-                self.print("正在压缩以下文件:")
+                self.print("正在压缩文件:")
                 with zipfile.ZipFile("temp.zip", "w", zipfile.ZIP_DEFLATED) as zip:
                     for relative_path in send_list:
                         self.print(relative_path)

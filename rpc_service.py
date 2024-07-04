@@ -73,6 +73,18 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
                     return
                 yield rpc_service_pb2.DownloadFileReply(data=data)
 
+    def ReceiveDirectory(self, request, context):
+        dir_path = self._get_filepath()
+        self._logger(f"同步文件到{dir_path}中")
+        zip_filepath = "temp.zip"
+        with open(zip_filepath, "wb") as fd:
+            for i in request:
+                fd.write(i.data)
+        self._logger("正在解压")
+        decompress("temp.zip", dir_path)
+        self._logger("解压成功")
+        self._logger("同步成功")
+
     def DirectoryStatus(self, request, context):
         directory_path = self._get_filepath()
         if os.path.basename(directory_path) != request.directory_name:
@@ -147,6 +159,20 @@ class GrpcClient:
         return stub.DirectoryStatus(
             rpc_service_pb2.DirectoryStatusRequest(directory_name=directory_name)
         )
+
+    @staticmethod
+    def upload_directory_archive(channel: grpc.Channel, archive_path: str = "temp.zip"):
+        def wrapper():
+            with open(archive_path, "rb") as fd:
+                while True:
+                    data = fd.read(BUF_SIZE)
+                    if len(data) <= 0:
+                        return
+                    yield rpc_service_pb2.ReceiveDirectoryRequest(data=data)
+
+        stub = rpc_service_pb2_grpc.RpcStub(channel)
+        response = stub.ReceiveDirectory(wrapper())
+        return response
 
 
 def serve():
