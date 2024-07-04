@@ -22,7 +22,7 @@ import grpc
 from PySide6.QtGui import QMoveEvent
 
 from compress import compress_file, decompress
-from rpc_service import GrpcClient, RPCService
+from rpc_service import GrpcClient, RPCService, path_convention
 from config import Config
 import rpc_service_pb2_grpc
 
