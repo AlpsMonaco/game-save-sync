@@ -9,16 +9,16 @@ service Rpc {
   rpc UploadFile(stream UploadFileRequest) returns (UploadFileReply) {}
   rpc DownloadFile(DownloadFileRequest) returns (stream DownloadFileReply) {}
   rpc DirectoryStatus(DirectoryStatusRequest) returns (DirectoryStatusReply) {}
-  rpc ReceiveDirectory(ReceiveDirectoryRequest)
+  rpc ReceiveDirectory(stream ReceiveDirectoryRequest)
       returns (ReceiveDirectoryReply) {}
   rpc DownloadDirectory(DownloadDirectoryRequest)
-      returns (DownloadDirectoryReply) {}
+      returns (stream DownloadDirectoryReply) {}
 }
 
-message ReceiveDirectoryRequest {}
+message ReceiveDirectoryRequest { bytes data = 1; }
 message ReceiveDirectoryReply {}
-message DownloadDirectoryRequest {}
-message DownloadDirectoryReply {}
+message DownloadDirectoryRequest { repeated string files = 1; }
+message DownloadDirectoryReply { bytes data = 1; }
 message DirectoryStatusRequest { string directory_name = 1; }
 message DirectoryStatusReply { repeated FileStatusReply files = 1; }
 message DownloadFileRequest {}

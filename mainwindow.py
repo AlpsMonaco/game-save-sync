@@ -4,6 +4,7 @@ import os
 import sys
 import threading
 import time
+import zipfile
 from PySide6.QtWidgets import (
     QWidget,
     QPushButton,
@@ -28,6 +29,11 @@ import rpc_service_pb2_grpc
 
 class Signal(QObject):
     print_to_console = Signal(str)
+
+
+def path_convention(path: str):
+    path.replace("\\", "/")
+    return os.path.join(*(path.split("/")))
 
 
 class MainWindow(QWidget):
@@ -165,11 +171,47 @@ class MainWindow(QWidget):
 
     def sync_directory(self):
         with GrpcClient.get_channel(self.config.ip) as channel:
+            directory_path = self.filepath_line_edit.text()
             response = GrpcClient.get_remote_files_status(
-                channel, os.path.basename(self.filepath_line_edit.text())
+                channel, os.path.basename(directory_path)
             )
+            remote_files_dict = {}
+            receive_list = []
+            send_list = []
             for file_info in response.files:
-                self.print(str(file_info))
+                remote_filepath = path_convention(file_info.filename)
+                remote_files_dict[remote_filepath] = file_info
+                if not os.path.exists(os.path.join(directory_path, remote_filepath)):
+                    receive_list.append(remote_filepath)
+            for path, _, filenames in os.walk(directory_path):
+                for filename in filenames:
+                    local_filepath = os.path.join(path, filename)
+                    relative_path = local_filepath[len(directory_path) + 1 :]
+                    if relative_path not in remote_files_dict:
+                        send_list.append(relative_path)
+                        continue
+                    remote_file = remote_files_dict[relative_path]
+                    md5 = None
+                    try:
+                        with open(local_filepath, "rb") as fp:
+                            data = fp.read()
+                            md5 = hashlib.md5(data).hexdigest()
+                        if remote_file.md5 != md5:
+                            local_file_timestamp = int(os.path.getmtime(local_filepath))
+                            if local_file_timestamp > remote_file.md5:
+                                send_list.append(relative_path)
+                            else:
+                                receive_list.append(relative_path)
+
+                    except Exception as e:
+                        self.print(str(e))
+
+            if len(send_list) > 0:
+                with zipfile.ZipFile("temp.zip", "w", zipfile.ZIP_DEFLATED) as zip:
+                    for relative_path in send_list:
+                        local_filepath = os.path.join(directory_path, relative_path)
+                        zip_filepath = local_filepath[len(directory_path) + 1 :]
+                        zip.write(local_filepath, zip_filepath)
 
     def start_sync(self):
         self.sync_button.setDisabled(True)
