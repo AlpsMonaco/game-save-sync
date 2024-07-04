@@ -31,10 +31,6 @@ class Signal(QObject):
     print_to_console = Signal(str)
 
 
-def path_convention(path: str):
-    path.replace("\\", "/")
-    return os.path.join(*(path.split("/")))
-
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -207,18 +203,23 @@ class MainWindow(QWidget):
                         self.print(str(e))
 
             if len(send_list) > 0:
-                self.print("正在压缩文件:")
+                self.print("正在发送文件到远端")
                 with zipfile.ZipFile("temp.zip", "w", zipfile.ZIP_DEFLATED) as zip:
                     for relative_path in send_list:
-                        self.print(relative_path)
                         local_filepath = os.path.join(directory_path, relative_path)
                         zip_filepath = local_filepath[len(directory_path) + 1 :]
                         zip.write(local_filepath, zip_filepath)
-                self.print("压缩成功")
-                self.print("正在发送")
-                # todo
                 GrpcClient.upload_directory_archive(channel)
                 self.print("发送成功")
+            if len(receive_list) > 0:
+                self.print("正在从远端拉取文件")
+                with open("temp.zip", "wb") as fp:
+                    for i in GrpcClient.download_files():
+                        fp.write(i.data)
+                decompress("temp.zip", directory_path)
+                self.print("拉取成功")
+
+            self.print("同步成功")
 
     def start_sync(self):
         self.sync_button.setDisabled(True)

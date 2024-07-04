@@ -4,6 +4,7 @@ import logging
 import os
 import time
 import sys
+import zipfile
 
 import grpc
 from compress import compress_file, decompress
@@ -12,6 +13,11 @@ import rpc_service_pb2_grpc
 from threading import Thread
 
 DEFAULT_GRPC_PORT = 6465
+
+
+def path_convention(path: str):
+    path.replace("\\", "/")
+    return os.path.join(*(path.split("/")))
 
 
 class RPCService(rpc_service_pb2_grpc.RpcServicer):
@@ -72,6 +78,24 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
                     self._logger(f"发送文件成功")
                     return
                 yield rpc_service_pb2.DownloadFileReply(data=data)
+
+    def DownloadDirectory(self, request, context):
+        self._logger("正在发送文件到远端")
+        directory_path = self._get_filepath()
+        zip_filepath = "temp.zip"
+        with zipfile.ZipFile(zip_filepath, "w", zipfile.ZIP_DEFLATED) as zip:
+            for file in request.files:
+                file = path_convention(file)
+                local_filepath = os.path.join(directory_path, file)
+                zip_filepath = local_filepath[len(directory_path) + 1 :]
+                zip.write(local_filepath, zip_filepath)
+        with open(zip_filepath, "rb") as fd:
+            while True:
+                data = fd.read(BUF_SIZE)
+                if len(data) <= 0:
+                    self._logger(f"发送文件成功")
+                    return
+                yield rpc_service_pb2.DownloadDirectoryReply(data=data)
 
     def ReceiveDirectory(self, request, context):
         dir_path = self._get_filepath()
@@ -174,6 +198,13 @@ class GrpcClient:
         stub = rpc_service_pb2_grpc.RpcStub(channel)
         response = stub.ReceiveDirectory(wrapper())
         return response
+
+    @staticmethod
+    def download_files(channel: grpc.Channel, files):
+        stub = rpc_service_pb2_grpc.RpcStub(channel)
+        return stub.DownloadDirectory(
+            rpc_service_pb2.DownloadDirectoryRequest(files=files)
+        )
 
 
 def serve():
