@@ -31,7 +31,6 @@ class Signal(QObject):
     print_to_console = Signal(str)
 
 
-
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -214,7 +213,8 @@ class MainWindow(QWidget):
             if len(receive_list) > 0:
                 self.print("正在从远端拉取文件")
                 with open("temp.zip", "wb") as fp:
-                    for i in GrpcClient.download_files():
+                    response = GrpcClient.download_files(channel, receive_list)
+                    for i in response:
                         fp.write(i.data)
                 decompress("temp.zip", directory_path)
                 self.print("拉取成功")
