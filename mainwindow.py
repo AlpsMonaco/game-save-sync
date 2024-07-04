@@ -193,7 +193,7 @@ class MainWindow(QWidget):
                             md5 = hashlib.md5(data).hexdigest()
                         if remote_file.md5 != md5:
                             local_file_timestamp = int(os.path.getmtime(local_filepath))
-                            if local_file_timestamp > remote_file.md5:
+                            if local_file_timestamp > remote_file.timestamp:
                                 send_list.append(relative_path)
                             else:
                                 receive_list.append(relative_path)
