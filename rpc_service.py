@@ -109,7 +109,7 @@ BUF_SIZE = 1024 * 1024 * 2
 class GrpcClient:
     @staticmethod
     def get_channel(addr: str):
-        ip = None
+        ip = addr
         port = DEFAULT_GRPC_PORT
         i = addr.find(":")
         if i != -1:
