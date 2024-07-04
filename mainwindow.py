@@ -18,9 +18,10 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QObject, Signal
 import grpc
+from PySide6.QtGui import QMoveEvent
 
 from compress import compress_file, decompress
-from rpc_service import GRPC_PORT, GrpcClient, RPCService
+from rpc_service import GrpcClient, RPCService
 from config import Config
 import rpc_service_pb2_grpc
 
@@ -45,7 +46,7 @@ class MainWindow(QWidget):
         self.config = Config()
 
         hbox_layout_01 = QHBoxLayout()
-        self.ip_label = QLabel("ip:")
+        self.ip_label = QLabel("远程地址:")
         self.ip_label.setMinimumWidth(35)
         self.ip_edit = QLineEdit(self.config.ip)
         # self.ip_edit.setStyleSheet("QLineEdit { padding-left: 0px; margin-left:14px}")
@@ -59,14 +60,17 @@ class MainWindow(QWidget):
         qvbox_layout.addLayout(hbox_layout_01)
 
         hbox_layout_02 = QHBoxLayout()
-        self.filepath_title_label = QLabel("文件:")
+        self.filepath_title_label = QLabel("目标:")
         self.filepath_title_label.setMinimumWidth(35)
         self.filepath_line_edit = QLineEdit(self.config.filepath)
         self.select_file_button = QPushButton("选择文件")
         self.select_file_button.clicked.connect(self.show_file_select_dialog)
+        self.select_directory_button = QPushButton("选择文件夹")
+        self.select_directory_button.clicked.connect(self.show_directory_select_dialog)
         hbox_layout_02.addWidget(self.filepath_title_label, 0)
         hbox_layout_02.addWidget(self.filepath_line_edit, 1)
         hbox_layout_02.addWidget(self.select_file_button, 0)
+        hbox_layout_02.addWidget(self.select_directory_button, 0)
         qvbox_layout.addLayout(hbox_layout_02)
 
         self.console = QTextEdit()
@@ -90,8 +94,15 @@ class MainWindow(QWidget):
         self.setLayout(qvbox_layout)
         self.setGeometry(300, 300, 500, 400)
         self.setWindowTitle("Game Save Sync")
+        if self.config.x is not None and self.config.y is not None:
+            self.move(self.config.x, self.config.y)
         self.show()
         self.start_grpc_thread()
+
+    def moveEvent(self, ev: QMoveEvent):
+        self.config.x = ev.pos().x()
+        self.config.y = ev.pos().y()
+        self.config.save()
 
     def start_grpc_thread(self):
         self.grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -99,23 +110,46 @@ class MainWindow(QWidget):
             RPCService(get_filepath=self.filepath_line_edit.text, logger=self.print),
             self.grpc_server,
         )
-        self.grpc_server.add_insecure_port("[::]:" + str(GRPC_PORT))
+        self.grpc_server.add_insecure_port("[::]:" + str(self.config.listen_port))
         self.grpc_server.start()
 
     def show_file_select_dialog(self):
         filepath = QFileDialog.getOpenFileName(
             self,
             "选择文件",
+            (
+                os.path.dirname(self.filepath_line_edit.text())
+                if self.filepath_line_edit.text() != ""
+                else "."
+            ),
         )
         if filepath[0] != "":
             self.filepath_line_edit.setText(filepath[0])
             self.config.filepath = filepath[0]
             self.config.save()
 
+    def show_directory_select_dialog(self):
+        dir_path = QFileDialog.getExistingDirectory(
+            self,
+            "选择文件夹",
+            (
+                os.path.dirname(self.filepath_line_edit.text())
+                if self.filepath_line_edit.text() != ""
+                else "."
+            ),
+        )
+        if dir_path != "":
+            self.filepath_line_edit.setText(dir_path)
+            self.config.filepath = dir_path
+            self.config.save()
+
     def show_ip_edit_dialog(self):
         input_dialog = QInputDialog()
         text, ok = input_dialog.getText(
-            self, "修改ip", "请输入ip:", text=self.config.ip
+            self,
+            "修改地址",
+            "请输入地址:",
+            text=self.config.ip,
         )
         if ok:
             self.ip_edit.setText(text)
@@ -129,6 +163,14 @@ class MainWindow(QWidget):
         self.print(f"压缩完成")
         return zip_filepath
 
+    def sync_directory(self):
+        with GrpcClient.get_channel(self.config.ip) as channel:
+            response = GrpcClient.get_remote_files_status(
+                channel, os.path.basename(self.filepath_line_edit.text())
+            )
+            for file_info in response.files:
+                self.print(str(file_info))
+
     def start_sync(self):
         self.sync_button.setDisabled(True)
 
@@ -136,6 +178,8 @@ class MainWindow(QWidget):
             self.print("开始同步")
             try:
                 local_filepath = self.filepath_line_edit.text()
+                if os.path.isdir(local_filepath):
+                    return self.sync_directory()
                 local_file_md5 = ""
                 local_file_basename = os.path.basename(local_filepath)
                 local_file_mtime = 0

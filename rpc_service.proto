@@ -2,47 +2,36 @@ syntax = "proto3";
 
 package game.save.sync;
 
-service Rpc { 
-  rpc Ping (PingRequest) returns (PingReply) {}
-  rpc Binary(BinaryRequest) returns(BinaryReply){}
-  rpc FileStatus(FileStatusRequest) returns(FileStatusReply){}
-  rpc UploadFile(stream UploadFileRequest)returns(UploadFileReply){}
-  rpc DownloadFile(DownloadFileRequest)returns(stream DownloadFileReply){}
+service Rpc {
+  rpc Ping(PingRequest) returns (PingReply) {}
+  rpc Binary(BinaryRequest) returns (BinaryReply) {}
+  rpc FileStatus(FileStatusRequest) returns (FileStatusReply) {}
+  rpc UploadFile(stream UploadFileRequest) returns (UploadFileReply) {}
+  rpc DownloadFile(DownloadFileRequest) returns (stream DownloadFileReply) {}
+  rpc DirectoryStatus(DirectoryStatusRequest) returns (DirectoryStatusReply) {}
+  rpc ReceiveDirectory(ReceiveDirectoryRequest)
+      returns (ReceiveDirectoryReply) {}
+  rpc DownloadDirectory(DownloadDirectoryRequest)
+      returns (DownloadDirectoryReply) {}
 }
 
-message DownloadFileRequest{}
-message DownloadFileReply{
-  bytes data = 1;
-}
-
-message UploadFileRequest{
-  bytes data = 1;
-}
-
-message UploadFileReply{
-  bool status = 1;
-}
-
-message PingRequest {
-  string msg = 1;
-}
-
-message PingReply {
-  string msg = 1;
-}
-
-message BinaryRequest{
-  bytes b = 1;
-}
-
-message BinaryReply{
-  string msg = 1;
-}
-
-message FileStatusRequest{}
-message FileStatusReply{
+message ReceiveDirectoryRequest {}
+message ReceiveDirectoryReply {}
+message DownloadDirectoryRequest {}
+message DownloadDirectoryReply {}
+message DirectoryStatusRequest { string directory_name = 1; }
+message DirectoryStatusReply { repeated FileStatusReply files = 1; }
+message DownloadFileRequest {}
+message DownloadFileReply { bytes data = 1; }
+message UploadFileRequest { bytes data = 1; }
+message UploadFileReply { bool status = 1; }
+message PingRequest { string msg = 1; }
+message PingReply { string msg = 1; }
+message BinaryRequest { bytes b = 1; }
+message BinaryReply { string msg = 1; }
+message FileStatusRequest {}
+message FileStatusReply {
   string md5 = 1;
   int64 timestamp = 2;
   string filename = 3;
 }
-

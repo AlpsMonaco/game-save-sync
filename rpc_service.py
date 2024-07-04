@@ -11,7 +11,7 @@ import rpc_service_pb2
 import rpc_service_pb2_grpc
 from threading import Thread
 
-GRPC_PORT = 6465
+DEFAULT_GRPC_PORT = 6465
 
 
 class RPCService(rpc_service_pb2_grpc.RpcServicer):
@@ -34,6 +34,9 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
             return rpc_service_pb2.FileStatusReply(
                 md5="", timestamp=0, filename=os.path.basename(filepath)
             )
+        if os.path.isdir(filepath):
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details("not a file")
         file_timestamp = int(os.path.getmtime(filepath))
         with open(filepath, "rb") as fp:
             data = fp.read()
@@ -70,14 +73,49 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
                     return
                 yield rpc_service_pb2.DownloadFileReply(data=data)
 
+    def DirectoryStatus(self, request, context):
+        directory_path = self._get_filepath()
+        if os.path.basename(directory_path) != request.directory_name:
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details("not a directory")
+            return rpc_service_pb2.DirectoryStatusReply()
+        result = []
+        for path, _, filenames in os.walk(directory_path):
+            for filename in filenames:
+                local_filepath = os.path.join(path, filename)
+                relative_path = local_filepath[len(directory_path) + 1 :]
+                md5 = None
+                try:
+                    with open(local_filepath, "rb") as fp:
+                        data = fp.read()
+                        md5 = hashlib.md5(data).hexdigest()
+                    file_timestamp = int(os.path.getmtime(local_filepath))
+                except Exception as e:
+                    print(e)
+                    continue
+                result.append(
+                    rpc_service_pb2.FileStatusReply(
+                        md5=md5,
+                        timestamp=file_timestamp,
+                        filename=relative_path,
+                    )
+                )
+        return rpc_service_pb2.DirectoryStatusReply(files=result)
+
 
 BUF_SIZE = 1024 * 1024 * 2
 
 
 class GrpcClient:
     @staticmethod
-    def get_channel(ip: str):
-        return grpc.insecure_channel(f"{ip}:{GRPC_PORT}")
+    def get_channel(addr: str):
+        ip = None
+        port = DEFAULT_GRPC_PORT
+        i = addr.find(":")
+        if i != -1:
+            ip = addr[:i]
+            port = int(addr[i + 1 :])
+        return grpc.insecure_channel(f"{ip}:{port}")
 
     @staticmethod
     def get_remote_file_status(channel: grpc.Channel):
@@ -102,6 +140,13 @@ class GrpcClient:
     def download_file(channel: grpc.Channel):
         stub = rpc_service_pb2_grpc.RpcStub(channel)
         return stub.DownloadFile(rpc_service_pb2.DownloadFileRequest())
+
+    @staticmethod
+    def get_remote_files_status(channel: grpc.Channel, directory_name: str):
+        stub = rpc_service_pb2_grpc.RpcStub(channel)
+        return stub.DirectoryStatus(
+            rpc_service_pb2.DirectoryStatusRequest(directory_name=directory_name)
+        )
 
 
 def serve():
@@ -140,7 +185,7 @@ if __name__ == "__main__":
         RPCService(get_filepath=lambda: sys.argv[1], logger=print),
         grpc_server,
     )
-    grpc_server.add_insecure_port("[::]:" + str(GRPC_PORT))
+    grpc_server.add_insecure_port("[::]:" + str(DEFAULT_GRPC_PORT))
     grpc_server.start()
     try:
         while True:
