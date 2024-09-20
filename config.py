@@ -1,6 +1,7 @@
 import json
 
 from rpc_service import DEFAULT_GRPC_PORT
+import locale
 
 
 class Config:
@@ -10,6 +11,7 @@ class Config:
         self.listen_port = DEFAULT_GRPC_PORT
         self.x = None
         self.y = None
+        self.lang = None
 
         try:
             with open("config.json") as fd:
@@ -28,9 +30,21 @@ class Config:
                     self.y = int(d["y"])
                 except Exception as e:
                     print(e)
+                try:
+                    self.lang = d["lang"]
+                except Exception as e:
+                    print(e)
+                    self._try_get_lang()
 
         except Exception as e:
-            print(e)
+            self._try_get_lang()
+
+    def _try_get_lang(self):
+        language, _ = locale.getdefaultlocale()
+        if language.lower().find("cn"):
+            self.lang = "cn"
+        else:
+            self.lang = "en"
 
     def save(self):
         try:
@@ -43,6 +57,7 @@ class Config:
                             "listen_port": self.listen_port,
                             "x": self.x,
                             "y": self.y,
+                            "lang": self.lang,
                         }
                     )
                 )
