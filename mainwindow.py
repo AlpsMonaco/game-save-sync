@@ -16,10 +16,11 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QTextEdit,
     QInputDialog,
+    QMenuBar,
 )
 from PySide6.QtCore import QObject, Signal
 import grpc
-from PySide6.QtGui import QMoveEvent
+from PySide6.QtGui import QMoveEvent, QAction
 
 from compress import compress_file, decompress
 from i18n import Text, get_i18n_text
@@ -30,17 +31,21 @@ import rpc_service_pb2_grpc
 
 class Signal(QObject):
     print_to_console = Signal(str)
+    debug = Signal(str)
 
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self._debug_mode = True
         self._grpc_client = None
         self.config = Config()
         self._text: Text = get_i18n_text(self.config.lang)
         self.initUI()
 
     def print(self, text):
+        if self._debug_mode:
+            return
         self.signal.print_to_console.emit(
             f'{time.strftime("[%Y-%m-%d %H:%M:%S]",time.localtime())} {text}'
         )
@@ -53,6 +58,7 @@ class MainWindow(QWidget):
         self.select_directory_button.setText(self._text.select_directory_button)
         self.sync_button.setText(self._text.sync_button)
         self.close_button.setText(self._text.close_button)
+        self.setWindowTitle(f"{self._text.title}")
 
     def switch_cn_en(self):
         if self.config.lang == "cn":
@@ -63,13 +69,34 @@ class MainWindow(QWidget):
         self._text = get_i18n_text(self.config.lang)
         self.i18n()
 
+    def _debug_method(self):
+        last = ""
+        while True:
+            time.sleep(1)
+            style = self.console.toPlainText()
+            if style != "":
+                if last != style:
+                    last = style
+                    self.signal.debug.emit(last)
+
+    def start_debug_thread(self):
+        t = threading.Thread(target=self._debug_method, daemon=True)
+        t.start()
+
+    def set_menu(self, qvbox_layout: QVBoxLayout):
+        self.menu_bar = QMenuBar(self)
+        # file_menu = self.menu_bar.addMenu("File")
+        # action = QAction("Settings", self)
+        # file_menu.addAction(action)
+        # qvbox_layout.setMenuBar(self.menu_bar)
+
     def initUI(self):
         qvbox_layout = QVBoxLayout()
+        self.set_menu(qvbox_layout)
         hbox_layout_01 = QHBoxLayout()
         self.ip_label = QLabel()
         self.ip_label.setMinimumWidth(35)
         self.ip_edit = QLineEdit(self.config.ip)
-        # self.ip_edit.setStyleSheet("QLineEdit { padding-left: 0px; margin-left:14px}")
         self.ip_edit.setReadOnly(True)
         self.ip_edit_button = QPushButton()
         self.ip_edit_button.clicked.connect(self.show_ip_edit_dialog)
@@ -97,7 +124,9 @@ class MainWindow(QWidget):
         qvbox_layout.addLayout(hbox_layout_02)
 
         self.console = QTextEdit()
-        self.console.setReadOnly(True)
+        self.console.setAcceptRichText(False)
+        if not self._debug_mode:
+            self.console.setReadOnly(True)
         qvbox_layout.addWidget(self.console)
 
         hbox_layout_04 = QHBoxLayout()
@@ -113,15 +142,17 @@ class MainWindow(QWidget):
 
         self.signal = Signal()
         self.signal.print_to_console.connect(self.console.append)
+        self.signal.debug.connect(self.menu_bar.setStyleSheet)
 
         self.setLayout(qvbox_layout)
         self.setGeometry(300, 300, 500, 400)
-        self.setWindowTitle("Game Save Sync")
         if self.config.x is not None and self.config.y is not None:
             self.move(self.config.x, self.config.y)
         self.i18n()
         self.show()
         self.start_grpc_thread()
+        if self._debug_method:
+            self.start_debug_thread()
 
     def moveEvent(self, ev: QMoveEvent):
         self.config.x = ev.pos().x()
@@ -129,13 +160,19 @@ class MainWindow(QWidget):
         self.config.save()
 
     def start_grpc_thread(self):
-        self.grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        rpc_service_pb2_grpc.add_RpcServicer_to_server(
-            RPCService(get_filepath=self.filepath_line_edit.text, logger=self.print),
-            self.grpc_server,
-        )
-        self.grpc_server.add_insecure_port("[::]:" + str(self.config.listen_port))
-        self.grpc_server.start()
+        try:
+            self.grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+            rpc_service_pb2_grpc.add_RpcServicer_to_server(
+                RPCService(
+                    get_filepath=self.filepath_line_edit.text, logger=self.print
+                ),
+                self.grpc_server,
+            )
+            self.grpc_server.add_insecure_port("[::]:" + str(self.config.listen_port))
+            self.grpc_server.start()
+        except Exception as e:
+            self.print(e)
+            self.print(f"{self._text.unable_to_start_grpc_server}")
 
     def show_file_select_dialog(self):
         filepath = QFileDialog.getOpenFileName(
@@ -168,7 +205,7 @@ class MainWindow(QWidget):
             self.config.save()
 
     def show_ip_edit_dialog(self):
-        input_dialog = QInputDialog()
+        input_dialog = QInputDialog(self)
         input_dialog.setInputMode(QInputDialog.TextInput)
         input_dialog.setWindowTitle(self._text.ip_edit_dialog_title)
         input_dialog.setLabelText(
@@ -177,7 +214,7 @@ class MainWindow(QWidget):
         input_dialog.setTextValue(self.config.ip)
         line_edit = input_dialog.findChild(QLineEdit)
         line_edit.setPlaceholderText(f"192.168.x.x[:{DEFAULT_GRPC_PORT}]")
-        ret = input_dialog.exec_()
+        ret = input_dialog.exec()
         text = input_dialog.textValue()
         if ret == 1:
             self.ip_edit.setText(text)

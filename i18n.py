@@ -29,6 +29,8 @@ class Text:
         decompressing: str,
         decompress_success: str,
         fail: str,
+        unable_to_start_grpc_server: str,
+        title: str,
     ) -> None:
         self.ip_label = ip_label
         self.ip_edit_button = ip_edit_button
@@ -58,7 +60,9 @@ class Text:
         self.decompressing = decompressing
         self.decompress_success = decompress_success
         self.fail = fail
-    
+        self.unable_to_start_grpc_server = unable_to_start_grpc_server
+        self.title = title
+
 
 cn = Text(
     "远程地址:",
@@ -89,6 +93,8 @@ cn = Text(
     "正在解压",
     "解压成功",
     "失败",
+    "无法启动grpc服务器",
+    "游戏存档同步工具",
 )
 
 en = Text(
@@ -120,10 +126,12 @@ en = Text(
     "decompressing",
     "decompress successful",
     "fail",
+    "unable to start grpc server",
+    "Game Save Sync",
 )
 
 
-def get_i18n_text(code:str):
-    if code == 'cn':
+def get_i18n_text(code: str):
+    if code == "cn":
         return cn
     return en
