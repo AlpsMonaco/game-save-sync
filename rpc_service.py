@@ -8,6 +8,7 @@ import zipfile
 
 import grpc
 from compress import compress_file, decompress
+from i18n import Text
 import rpc_service_pb2
 import rpc_service_pb2_grpc
 from threading import Thread
@@ -25,6 +26,9 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
         super().__init__()
         self._get_filepath = kwargs["get_filepath"]
         self._logger = kwargs["logger"]
+
+    def set_text_source(self, text: Text):
+        self._text = text
 
     def Ping(self, request, context):
         print(request)
@@ -53,34 +57,34 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
 
     def UploadFile(self, it, context):
         filepath = self._get_filepath()
-        self._logger(f"正在接收文件{os.path.basename(filepath)}")
+        self._logger(f"{self._text.receiving_file} {os.path.basename(filepath)}")
         zip_filepath = "temp.zip"
         with open(zip_filepath, "wb") as fd:
             for i in it:
                 fd.write(i.data)
-        self._logger(f"接收文件成功")
-        self._logger(f"正在解压")
+        self._logger(f"{self._text.receive_file_successful}")
+        self._logger(f"{self._text.decompressing}")
         decompress(zip_filepath, os.path.dirname(filepath))
-        self._logger(f"解压成功")
+        self._logger(f"{self._text.decompress_success}")
         return rpc_service_pb2.UploadFileReply(status=True)
 
     def DownloadFile(self, request, context):
         filepath = self._get_filepath()
-        self._logger(f"正在压缩{os.path.basename(filepath)}")
+        self._logger(f"{self._text.compressing} {os.path.basename(filepath)}")
         zip_filepath = "temp.zip"
         compress_file(filepath, zip_filepath)
-        self._logger(f"压缩成功")
-        self._logger(f"发送文件{os.path.basename(filepath)}")
+        self._logger(f"{self._text.compress_done}")
+        self._logger(f"{self._text.sending_file} {os.path.basename(filepath)}")
         with open(zip_filepath, "rb") as fd:
             while True:
                 data = fd.read(BUF_SIZE)
                 if len(data) <= 0:
-                    self._logger(f"发送文件成功")
+                    self._logger(f"{self._text.send_success}")
                     return
                 yield rpc_service_pb2.DownloadFileReply(data=data)
 
     def DownloadDirectory(self, request, context):
-        self._logger("正在发送文件到远端")
+        self._logger(f"{self._text.sending_file_to_remote}")
         directory_path = self._get_filepath()
         with zipfile.ZipFile("temp.zip", "w", zipfile.ZIP_DEFLATED) as zip:
             for file in request.files:
@@ -92,21 +96,21 @@ class RPCService(rpc_service_pb2_grpc.RpcServicer):
             while True:
                 data = fd.read(BUF_SIZE)
                 if len(data) <= 0:
-                    self._logger(f"发送文件成功")
+                    self._logger(f"{self._text.send_success}")
                     return
                 yield rpc_service_pb2.DownloadDirectoryReply(data=data)
 
     def ReceiveDirectory(self, request, context):
         dir_path = self._get_filepath()
-        self._logger(f"同步文件到{dir_path}中")
+        self._logger(self._text.syncing_file_to.format(dir_path))
         zip_filepath = "temp.zip"
         with open(zip_filepath, "wb") as fd:
             for i in request:
                 fd.write(i.data)
-        self._logger("正在解压")
+        self._logger(f"{self._text.decompressing}")
         decompress("temp.zip", dir_path)
-        self._logger("解压成功")
-        self._logger("同步成功")
+        self._logger(f"{self._text.decompress_success}")
+        self._logger(f"{self._text.sync_success}")
         return rpc_service_pb2.ReceiveDirectoryReply()
 
     def DirectoryStatus(self, request, context):

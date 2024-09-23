@@ -31,6 +31,10 @@ class Text:
         fail: str,
         unable_to_start_grpc_server: str,
         title: str,
+        receiving_file: str,
+        receive_file_successful: str,
+        sending_file: str,
+        syncing_file_to: str,
     ) -> None:
         self.ip_label = ip_label
         self.ip_edit_button = ip_edit_button
@@ -62,6 +66,10 @@ class Text:
         self.fail = fail
         self.unable_to_start_grpc_server = unable_to_start_grpc_server
         self.title = title
+        self.receiving_file = receiving_file
+        self.receive_file_successful = receive_file_successful
+        self.sending_file = sending_file
+        self.syncing_file_to = syncing_file_to
 
 
 cn = Text(
@@ -95,6 +103,10 @@ cn = Text(
     "失败",
     "无法启动grpc服务器",
     "游戏存档同步工具",
+    "正在接收文件",
+    "接收文件成功",
+    "正在发送文件",
+    "同步文件到{}中"
 )
 
 en = Text(
@@ -128,6 +140,10 @@ en = Text(
     "fail",
     "unable to start grpc server",
     "Game Save Sync",
+    "receiving file",
+    "receive file successful",
+    "sending file",
+    "syncing file to {}"
 )
 
 

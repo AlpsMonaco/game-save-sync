@@ -37,7 +37,7 @@ class Signal(QObject):
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self._debug_mode = True
+        self._debug_mode = False
         self._grpc_client = None
         self.config = Config()
         self._text: Text = get_i18n_text(self.config.lang)
@@ -67,6 +67,7 @@ class MainWindow(QWidget):
             self.config.lang = "cn"
         self.config.save()
         self._text = get_i18n_text(self.config.lang)
+        self.rpc_service.set_text_source(self._text)
         self.i18n()
 
     def _debug_method(self):
@@ -162,10 +163,12 @@ class MainWindow(QWidget):
     def start_grpc_thread(self):
         try:
             self.grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+            self.rpc_service = RPCService(
+                get_filepath=self.filepath_line_edit.text, logger=self.print
+            )
+            self.rpc_service.set_text_source(self._text)
             rpc_service_pb2_grpc.add_RpcServicer_to_server(
-                RPCService(
-                    get_filepath=self.filepath_line_edit.text, logger=self.print
-                ),
+                self.rpc_service,
                 self.grpc_server,
             )
             self.grpc_server.add_insecure_port("[::]:" + str(self.config.listen_port))
@@ -223,7 +226,7 @@ class MainWindow(QWidget):
 
     def compress_file(self, filepath: str):
         zip_filepath = "temp.zip"
-        self.print(f"{self._text.compressing}{os.path.basename(filepath)}")
+        self.print(f"{self._text.compressing} {os.path.basename(filepath)}")
         compress_file(filepath, zip_filepath)
         self.print(f"{self._text.compress_done}")
         return zip_filepath
