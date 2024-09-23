@@ -7,3 +7,4 @@ dist
 mainwindow.*
 *.zip
 base_library
+.venv
