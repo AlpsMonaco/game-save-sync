@@ -1,5 +1,7 @@
 # Game Save Sync
 
+[README](README.md) | [中文文档](README_zh_CN.md.md)
+
 `game-save-sync` is a GUI tool for synchronizing files or directories.  
 It was originally created to sync game saves between my PC and Steam Deck,  
 as Steam cannot sync third-party game saves or may fail due to network issues.
