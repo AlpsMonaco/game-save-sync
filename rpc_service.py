@@ -8,7 +8,7 @@ import zipfile
 
 import grpc
 from compress import compress_file, decompress
-from i18n import Text
+from i18n import Text,en
 import rpc_service_pb2
 import rpc_service_pb2_grpc
 from threading import Thread
@@ -242,8 +242,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     grpc_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    rpc_service = RPCService(get_filepath=lambda: sys.argv[1], logger=print)
+    rpc_service.set_text_source(en)
     service = rpc_service_pb2_grpc.add_RpcServicer_to_server(
-        RPCService(get_filepath=lambda: sys.argv[1], logger=print),
+        rpc_service,
         grpc_server,
     )
     grpc_server.add_insecure_port("[::]:" + str(DEFAULT_GRPC_PORT))
