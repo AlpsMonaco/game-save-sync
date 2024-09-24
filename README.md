@@ -80,3 +80,10 @@ Or simply run `pack.bat`.
 pyinstaller game-save-sync.spec
 ```
 Or simply run `pack.sh`.
+
+
+### Non-GUI Environment
+To run this tool in a non-GUI environment, such as on a Linux server with a public IP, simply use the following command:
+```bash
+python rpc_service.py [file or directory path]
+```

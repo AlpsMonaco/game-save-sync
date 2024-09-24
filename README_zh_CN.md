@@ -77,3 +77,9 @@ pyinstaller game-save-sync.spec
 pyinstaller game-save-sync.spec
 ```
 或者直接运行 `pack.sh`.
+
+### 非图形用户界面环境
+如果您希望在非图形用户界面环境中运行此工具，例如在具有公共 IP 的 Linux 服务器上，可以使用以下命令：
+```bash
+python rpc_service.py [文件或目录路径]
+```
