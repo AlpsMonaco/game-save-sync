@@ -70,10 +70,10 @@ python mainwindow.py
 ```powershell
 pyinstaller game-save-sync.spec
 ```
-或者直接运行 pack.bat.
+或者直接运行 `pack.bat`.
 
 #### Linux/Mac OS
 ```bash
 pyinstaller game-save-sync.spec
 ```
-或者直接运行 pack.sh.
+或者直接运行 `pack.sh`.
