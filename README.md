@@ -7,9 +7,10 @@ as Steam cannot sync third-party game saves or may fail due to network issues.
 ![Usage](window.png "Usage Screenshot")
 
 ## Quick Start
-1. Enter the Remote IP
-2. Select a File or Directory
-3. Press "Sync"
+1. Ensure the tool is running on both sides.
+2. Enter the Remote IP
+3. Select a File or Directory
+4. Press "Sync"
 
 You can download the Windows version from the [release page](#).  
 For Linux/Mac OS, you'll need to install `python` or package it yourself.
