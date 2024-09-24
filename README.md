@@ -14,7 +14,7 @@ as Steam cannot sync third-party game saves or may fail due to network issues.
 3. Select a File or Directory
 4. Press "Sync"
 
-You can download the Windows version from the [release page](#).  
+You can download the Windows version from the [release page](https://github.com/AlpsMonaco/game-save-sync/releases).  
 For Linux/Mac OS, you'll need to install `python` or package it yourself.
 
 ## Features

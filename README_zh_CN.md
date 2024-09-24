@@ -10,9 +10,9 @@
 1. 确保两端都开启了这个工具
 2. 输入远程 IP
 3. 选择文件或目录
-4. 点击“Sync”按钮
+4. 点击“同步”按钮
 
-你可以从 [发布页面](#) 下载 Windows 版本。  
+你可以从 [发布页面](https://github.com/AlpsMonaco/game-save-sync/releases) 下载 Windows 版本。  
 对于 Linux/Mac OS，你需要安装 `python` 或自行打包。
 
 ## 功能
