@@ -152,7 +152,7 @@ class MainWindow(QWidget):
         self.i18n()
         self.show()
         self.start_grpc_thread()
-        if self._debug_method:
+        if self._debug_mode:
             self.start_debug_thread()
 
     def moveEvent(self, ev: QMoveEvent):
